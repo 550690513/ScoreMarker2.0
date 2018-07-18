@@ -1,0 +1,38 @@
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+	   xsi:schemaLocation="http://www.springframework.org/schema/rabbit
+           http://www.springframework.org/schema/rabbit/spring-rabbit.xsd
+           http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<!-- 定义RabbitMQ的连接工厂信息 -->
+	<rabbit:connection-factory id="connectionFactory"
+							   host="${rabbitmq.host}" port="${rabbitmq.port}"
+							   username="${rabbitmq.username}" password="${rabbitmq.password}"/>
+
+
+	<!-- 定义RabbitMQ的管理 -->
+	<rabbit:admin connection-factory="connectionFactory"/>
+
+
+	<!--
+		定义RabbitMQ队列
+		auto-declare="true":自动声明
+		durable="true":持久化
+	-->
+	<rabbit:queue name="${rabbitmq.queue.answerSheet-pc}" auto-declare="true" durable="true"/>
+	<rabbit:queue name="${rabbitmq.queue.answerSheet-phone}" auto-declare="true" durable="true"/>
+
+
+	<!-- 消费者监听指定MQ消息队列 -->
+	<rabbit:listener-container connection-factory="connectionFactory">
+		<rabbit:listener ref="pcScoreMarkerConsumer" queues="${rabbitmq.queue.answerSheet-pc}"/>
+		<rabbit:listener ref="phoneScoreMarkerConsumer" queues="${rabbitmq.queue.answerSheet-phone}"/>
+	</rabbit:listener-container>
+
+
+	<!-- 在Spring-IOC容器中实例化MQ消息的消费者 -->
+	<bean id="pcScoreMarkerConsumer" class="com.examstack.scoremarker.mq.PCScoreMarkerConsumer"/>
+	<bean id="phoneScoreMarkerConsumer" class="com.examstack.scoremarker.mq.PhoneScoreMarkerConsumer"/>
+
+</beans>
